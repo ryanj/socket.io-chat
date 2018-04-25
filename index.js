@@ -10,9 +10,31 @@ const redis_pub_host = process.env.REDIS_ENDPOINT || "redis";
 const redis_sub_host = process.env.REDIS_ENDPOINT || "redis";
 const redis_port = process.env.REDIS_SERVICE_PORT || 6379;
 const redis_pass = process.env.REDIS_SERVICE_PASS || "redis";
-const redis_pub = redis.createClient(redis_port, redis_pub_host, { auth_pass: redis_pass });
-const redis_sub = redis.createClient(redis_port, redis_sub_host, { auth_pass: redis_pass });
-io.adapter(redis_socket({ pubClient: redis_pub, subClient: redis_sub }));
+const Redis = require('ioredis');
+
+const cluster = new Redis({
+  port: 6379,          // Redis port
+  host: 'redis',   // Redis host
+  family: 4,           // 4 (IPv4) or 6 (IPv6)
+  password: '1234'
+})
+//const cluster = new Redis.Cluster([
+//  {
+//    port: redis_port,
+//    host: redis_pub_host,
+//    password: redis_pass
+//  },
+//  {
+//    port: redis_port,
+//    host: redis_sub_host,
+//    password: redis_pass
+//  }
+//]);
+
+io.adapter(redis_socket({ pubClient: cluster, subClient: cluster }));
+//const redis_pub = redis.createClient(redis_port, redis_pub_host, { auth_pass: redis_pass });
+//const redis_sub = redis.createClient(redis_port, redis_sub_host, { auth_pass: redis_pass });
+//io.adapter(redis_socket({ pubClient: redis_pub, subClient: redis_sub }));
 
 var Presence = require('./lib/presence');
 
