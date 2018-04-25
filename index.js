@@ -3,9 +3,16 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var server = require('http').createServer(app);
+const redis = require('redis');
 var io = require('socket.io')(server);
-var redis = require('socket.io-redis');
-io.adapter(redis({ host: process.env.REDIS_ENDPOINT, port: 6379 }));
+var redis_socket = require('socket.io-redis');
+const redis_pub_host = process.env.REDIS_ENDPOINT || "redis";
+const redis_sub_host = process.env.REDIS_ENDPOINT || "redis";
+const redis_port = process.env.REDIS_SERVICE_PORT || 6379;
+const redis_pass = process.env.REDIS_SERVICE_PASS || "redis";
+const redis_pub = redis.createClient(redis_port, redis_pub_host, { auth_pass: redis_pass });
+const redis_sub = redis.createClient(redis_port, redis_sub_host, { auth_pass: redis_pass });
+io.adapter(redis_socket({ pubClient: redis_pub, subClient: redis_sub }));
 
 var Presence = require('./lib/presence');
 
@@ -13,7 +20,7 @@ var Presence = require('./lib/presence');
 io.set('heartbeat timeout', 8000);
 io.set('heartbeat interval', 4000);
 
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 8080;
 
 server.listen(port, function() {
   console.log('Server listening at port %d', port);
